@@ -1,1 +1,0 @@
-/usr/bin/c++   -std=c++11 -Wno-deprecated   CMakeFiles/main.dir/Teapot.cpp.o  -o main -rdynamic -lGL -lGLU -lglut 
