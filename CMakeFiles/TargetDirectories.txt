@@ -1,0 +1,3 @@
+/home/cosc/student/tjm195/Desktop/teapot/CMakeFiles/rebuild_cache.dir
+/home/cosc/student/tjm195/Desktop/teapot/CMakeFiles/edit_cache.dir
+/home/cosc/student/tjm195/Desktop/teapot/CMakeFiles/main.dir
