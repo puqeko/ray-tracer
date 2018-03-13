@@ -14,16 +14,27 @@ endif ()
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wno-deprecated")
 
-add_executable(main Teapot.cpp)
+add_executable(cannon Cannon.cpp)
+add_executable(humanoid Humanoid.cpp)
 
 if (APPLE)
-	target_link_libraries(main
+	target_link_libraries(cannon
+		${OPENGL_gl_LIBRARY}
+		${OPENGL_glu_LIBRARY}
+		${GLUT_LIBRARIES}
+	)
+	target_link_libraries(humanoid
 		${OPENGL_gl_LIBRARY}
 		${OPENGL_glu_LIBRARY}
 		${GLUT_LIBRARIES}
 	)
 else ()
-	target_link_libraries(main
+	target_link_libraries(cannon
+		GL
+		GLU
+		glut
+	)
+	target_link_libraries(humanoid
 		GL
 		GLU
 		glut
