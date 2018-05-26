@@ -4,6 +4,7 @@ project(lab)
 include_directories(
 	/usr/include
 	/usr/local/include
+	./lib
 )
 
 if (APPLE)
@@ -14,19 +15,28 @@ endif ()
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wno-deprecated")
 
-add_executable(coil Coil.cpp)
+add_executable(main RayTracer.cpp)
+
+file(GLOB SOURCE_FILES ./lib/*.cpp)
+file(GLOB HEADER_FILES ./lib/*.hpp)
+add_library(rtlibs
+	${SOURCE_FILES}
+	${HEADER_FILES}
+)
 
 if (APPLE)
-	target_link_libraries(coil
+	target_link_libraries(main
 		${OPENGL_gl_LIBRARY}
 		${OPENGL_glu_LIBRARY}
 		${GLUT_LIBRARIES}
+		rtlibs
 	)
 else ()
-	target_link_libraries(coil
+	target_link_libraries(main
 		GL
 		GLU
 		glut
+		rtlibs
 	)
 endif()
 
