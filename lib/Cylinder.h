@@ -22,6 +22,8 @@ private:
     glm::vec3 center;
     float radius;
 
+	bool inBounds(glm::vec3 pt);
+
 public:	
 	Cylinder()
 		: center(glm::vec3(0)), radius(1)  //Default constructor creates a unit sphere

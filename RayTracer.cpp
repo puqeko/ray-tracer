@@ -155,7 +155,7 @@ void initialize()
     glClearColor(0, 0, 0, 1);
 
 	Sphere *sphere1 = new Sphere(glm::vec3(-5.0, 0.0, -90.0), 15.0, glm::vec3(0, 0, 1));
-	Cylinder *cylinder = new Cylinder(glm::vec3(5.0, 5.0, -70.0), 4.0, glm::vec3(1, 0, 0));
+	Cylinder *cylinder = new Cylinder(glm::vec3(5.0, -15.0, -70.0), 4.0, glm::vec3(1, 0, 0));
 	// Sphere *sphere2 = new Sphere(glm::vec3(5.0, 5.0, -70.0), 4.0, glm::vec3(1, 0, 0));
 	// Sphere *sphere3 = new Sphere(glm::vec3(3.0, -15.0, -70.0), 4.0, glm::vec3(0, 1, 0));
 	Plane *plane = new Plane (glm::vec3(-20., -20, -40),
