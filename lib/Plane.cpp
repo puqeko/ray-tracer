@@ -40,7 +40,7 @@ float Plane::intersect(glm::vec3 posn, glm::vec3 dir)
     float t = glm::dot(vdif, n)/vdotn;
 	if(fabs(t) < 0.0001) return -1;
 	glm::vec3 q = posn + dir*t;
-	if(isInside(q)) return t;
+	if(isInside(q) || this->isInfinate) return t;
     else return -1;
 }
 

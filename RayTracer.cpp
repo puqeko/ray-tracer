@@ -18,6 +18,7 @@
 #endif
 
 #include "Sphere.h"
+#include "Cylinder.h"
 #include "Plane.h"
 #include "Cube.h"
 #include "SceneObject.h"
@@ -153,22 +154,22 @@ void initialize()
     gluOrtho2D(XMIN, XMAX, YMIN, YMAX);
     glClearColor(0, 0, 0, 1);
 
-	//-- Create a pointer to a sphere object
-	// Sphere *sphere1 = new Sphere(glm::vec3(-5.0, 0.0, -90.0), 15.0, glm::vec3(0, 0, 1));
-	Sphere *sphere2 = new Sphere(glm::vec3(5.0, 5.0, -70.0), 4.0, glm::vec3(1, 0, 0));
-	Sphere *sphere3 = new Sphere(glm::vec3(3.0, -15.0, -70.0), 4.0, glm::vec3(0, 1, 0));
+	Sphere *sphere1 = new Sphere(glm::vec3(-5.0, 0.0, -90.0), 15.0, glm::vec3(0, 0, 1));
+	Cylinder *cylinder = new Cylinder(glm::vec3(5.0, 5.0, -70.0), 4.0, glm::vec3(1, 0, 0));
+	// Sphere *sphere2 = new Sphere(glm::vec3(5.0, 5.0, -70.0), 4.0, glm::vec3(1, 0, 0));
+	// Sphere *sphere3 = new Sphere(glm::vec3(3.0, -15.0, -70.0), 4.0, glm::vec3(0, 1, 0));
 	Plane *plane = new Plane (glm::vec3(-20., -20, -40),
                               glm::vec3(20., -20, -40),
                               glm::vec3(20., -20, -200),
                               glm::vec3(-20., -20, -200),
-                              glm::vec3(0.5, 0.5, 0));
-	Cube *cube = new Cube(0.2, glm::vec3(-5.0, 0.0, -90.0));
+                              glm::vec3(0.5, 0.5, 0),
+							  true);  // infinate plane
+	// Cube *cube = new Cube(5, glm::vec3(-10, -10, -80), glm::vec3(0.5, 0.5, 0));
 
-	//--Add the above to the list of scene objects.
-	// sceneObjects.push_back(sphere1); 
-	sceneObjects.push_back(cube); 
-	sceneObjects.push_back(sphere2); 
-	sceneObjects.push_back(sphere3);
+	sceneObjects.push_back(sphere1); 
+	// sceneObjects.push_back(cube); 
+	sceneObjects.push_back(cylinder);
+	// sceneObjects.push_back(sphere3);
 	sceneObjects.push_back(plane);
 }
 

@@ -16,12 +16,13 @@ class Plane : public SceneObject
 {
 private:
     glm::vec3 a, b, c, d;  //The four vertices
+	bool isInfinate = false;
 
 public:	
 	Plane(void);
 	
-    Plane(glm::vec3 pa, glm::vec3 pb, glm::vec3 pc, glm::vec3 pd, glm::vec3 col)
-		: a(pa), b(pb), c(pc), d(pd)
+    Plane(glm::vec3 pa, glm::vec3 pb, glm::vec3 pc, glm::vec3 pd, glm::vec3 col, bool infinate)
+		: a(pa), b(pb), c(pc), d(pd), isInfinate(infinate)
 	{
 		color = col;
 	};
