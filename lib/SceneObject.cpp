@@ -9,12 +9,7 @@
 
 #include "SceneObject.h"
 
-glm::vec3 SceneObject::getColor()
+glm::vec3 SceneObject::getColor(glm::vec3 pt)
 {
 	return color;
-}
-
-void SceneObject::setColor(glm::vec3 col)
-{
-	color = col;
 }

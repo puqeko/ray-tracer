@@ -44,21 +44,23 @@ vector<SceneObject*> sceneObjects;  //A global list containing pointers to objec
 //----------------------------------------------------------------------------------
 glm::vec3 trace(Ray ray, int step)
 {
-	glm::vec3 backgroundCol(0);
+	glm::vec3 backgroundCol(1);
 	glm::vec3 light(10, 40, -3);
 	glm::vec3 ambientCol(0.2);
 
     ray.closestPt(sceneObjects);
 
-    if(ray.xindex == -1) return backgroundCol; //If there is no intersection return background colour
+    if (ray.xindex == -1) return backgroundCol; //If there is no intersection return background colour
 
-    glm::vec3 materialCol = sceneObjects[ray.xindex]->getColor();
+	// if (ray.xindex)
+    glm::vec3 materialCol = sceneObjects[ray.xindex]->getColor(ray.xpt);
 	glm::vec3 colorSum = ambientCol * materialCol;  // default ambient color
 
 	// diffuse
 	glm::vec3 normalVector = sceneObjects[ray.xindex]->normal(ray.xpt);
 	glm::vec3 lightVector = glm::normalize(light - ray.xpt);
 	float lDotn = glm::dot(normalVector, lightVector);
+
 	if (lDotn > 0) {
 		// not in shadow
 		Ray shadow(ray.xpt, lightVector);
@@ -68,7 +70,6 @@ glm::vec3 trace(Ray ray, int step)
 			colorSum += materialCol * lDotn;
 
 			// specular color
-			// TODO: fix this
 			glm::vec3 reflVector = glm::reflect(-lightVector, normalVector);
 			float rDotv = glm::dot(reflVector, -ray.dir);
 			if (rDotv > 0) {
@@ -77,12 +78,19 @@ glm::vec3 trace(Ray ray, int step)
 		}
 
 		// reflections
-		bool isReflective = ray.xindex == 0;
-		if (isReflective && step < MAX_STEPS) {
+		if (sceneObjects[ray.xindex]->reflectivity > 0.0 && step < MAX_STEPS) {
 			glm::vec3 reflectedDir = glm::reflect(ray.dir, normalVector);
 			Ray reflectedRay(ray.xpt, reflectedDir);
-			glm::vec3 reflectedCol = trace(reflectedRay, step + 1);
-			colorSum = colorSum + (0.8f * reflectedCol);
+			glm::vec3 reflectedCol = trace(reflectedRay, step + 1);  // recurse
+			colorSum += sceneObjects[ray.xindex]->reflectivity * reflectedCol;
+		}
+
+		// transparancy
+		if (sceneObjects[ray.xindex]->opacity < 1.0 && step < MAX_STEPS) {
+			Ray throughRay(ray.xpt, ray.dir);  // + 0.001*ray.dir
+			glm::vec3 refractedCol = trace(throughRay, step + 1);
+			float op = sceneObjects[ray.xindex]->opacity;
+			colorSum = ((1.0f - op) * refractedCol) + (op * colorSum);
 		}
 	}
 
@@ -155,9 +163,11 @@ void initialize()
     glClearColor(0, 0, 0, 1);
 
 	Sphere *sphere1 = new Sphere(glm::vec3(-5.0, 0.0, -90.0), 15.0, glm::vec3(0, 0, 1));
-	Cylinder *cylinder = new Cylinder(glm::vec3(5.0, -15.0, -70.0), 4.0, glm::vec3(1, 0, 0));
-	// Sphere *sphere2 = new Sphere(glm::vec3(5.0, 5.0, -70.0), 4.0, glm::vec3(1, 0, 0));
-	// Sphere *sphere3 = new Sphere(glm::vec3(3.0, -15.0, -70.0), 4.0, glm::vec3(0, 1, 0));
+	sphere1->opacity = 0.2f;
+
+	// Cylinder *cylinder = new Cylinder(glm::vec3(5.0, -10.0, -70.0), 4.0, glm::vec3(1, 0, 0));
+	Sphere *sphere2 = new Sphere(glm::vec3(5.0, 5.0, -90.0), 4.0, glm::vec3(1, 0, 0));
+	Sphere *sphere3 = new Sphere(glm::vec3(3.0, -15.0, -70.0), 4.0, glm::vec3(0, 1, 0));
 	Plane *plane = new Plane (glm::vec3(-20., -20, -40),
                               glm::vec3(20., -20, -40),
                               glm::vec3(20., -20, -200),
@@ -166,10 +176,11 @@ void initialize()
 							  true);  // infinate plane
 	// Cube *cube = new Cube(5, glm::vec3(-10, -10, -80), glm::vec3(0.5, 0.5, 0));
 
-	sceneObjects.push_back(sphere1); 
+	sceneObjects.push_back(sphere1);
+	sceneObjects.push_back(sphere2);
 	// sceneObjects.push_back(cube); 
-	sceneObjects.push_back(cylinder);
-	// sceneObjects.push_back(sphere3);
+	// sceneObjects.push_back(cylinder);
+	sceneObjects.push_back(sphere3);
 	sceneObjects.push_back(plane);
 }
 

@@ -59,5 +59,17 @@ glm::vec3 Plane::normal(glm::vec3 pt)
     return n;
 }
 
+glm::vec3 Plane::getColor(glm::vec3 pt)
+{
+	bool isxEven = (int)(pt.x/10) % 2 == 0;
+	if (pt.x < 0) isxEven = !isxEven;
 
+	bool isyEven = (int)(pt.z/10) % 2 == 0;
+	if (pt.y < 0) isyEven = !isyEven;
 
+	if (isxEven) {
+		return (isyEven) ? glm::vec3(0, 0, 0) : glm::vec3(1, 1, 1);
+	} else {
+		return (isyEven) ? glm::vec3(1, 1, 1) : glm::vec3(0, 0, 0);
+	}
+}

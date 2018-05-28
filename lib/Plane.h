@@ -28,11 +28,9 @@ public:
 	};
 
 	bool isInside(glm::vec3 pt);
-	
 	float intersect(glm::vec3 posn, glm::vec3 dir);
-	
 	glm::vec3 normal(glm::vec3 pt);
-
+	glm::vec3 getColor(glm::vec3 pt);
 };
 
 #endif //!H_PLANE

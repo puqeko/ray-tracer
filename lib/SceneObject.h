@@ -19,12 +19,14 @@ class SceneObject
 protected:
 	glm::vec3 color;
 public:
+	float reflectivity = 0.0;  // component of ray is a reflection
+	float refractiveIndex = 1.0;  // index for refraction calculation
+	float opacity = 1.0;  // how visable is it
 	SceneObject() {}
     virtual float intersect(glm::vec3 pos, glm::vec3 dir) = 0;
 	virtual glm::vec3 normal(glm::vec3 pos) = 0;
 	virtual ~SceneObject() {}
-	glm::vec3 getColor();
-	void setColor(glm::vec3 col);
+	virtual glm::vec3 getColor(glm::vec3 pt);
 };
 
 #endif
