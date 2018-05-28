@@ -68,15 +68,29 @@ glm::vec3 trace(Ray ray, int step)
 		// not in shadow
 		Ray shadow(ray.xpt, lightVector);
 		shadow.closestPt(sceneObjects);
-		if (shadow.xindex == -1 || shadow.xdist > glm::length(light - ray.xpt)) {
-			// not shadowed by another object
-			colorSum += materialCol * lDotn;
 
-			// specular color
-			glm::vec3 reflVector = glm::reflect(-lightVector, normalVector);
-			float rDotv = glm::dot(reflVector, -ray.dir);
-			if (rDotv > 0) {
-				colorSum += glm::vec3(1.0f) * pow(rDotv, 10.0f);
+		// assuming not covered by another object
+		glm::vec3 lighting = materialCol * lDotn;
+
+		// specular color
+		glm::vec3 reflVector = glm::reflect(-lightVector, normalVector);
+		float rDotv = glm::dot(reflVector, -ray.dir);
+		if (rDotv > 0) {
+			lighting += glm::vec3(1.0f) * pow(rDotv, 10.0f);
+		}
+
+		if (shadow.xindex == -1) {
+			colorSum += lighting;
+		} else {
+			if (shadow.xdist > glm::length(light - ray.xpt)) {
+				colorSum += lighting;
+			} else {
+				float op = sceneObjects[shadow.xindex]->opacity;
+				colorSum += (1.0f - op) * lighting;
+
+				// cheap transparent shadowing
+				// TODO: add recursive verson that goes through multiple objects
+				colorSum += (1.0f - op) * sceneObjects[shadow.xindex]->getColor(ray.xpt) * lDotn;
 			}
 		}
 
@@ -165,10 +179,11 @@ void initialize()
     gluOrtho2D(XMIN, XMAX, YMIN, YMAX);
     glClearColor(0, 0, 0, 1);
 
-	Sphere *sphere1 = new Sphere(glm::vec3(-5.0, 0.0, -90.0), 15.0, glm::vec3(0, 0, 1));
-	sphere1->reflectivity = 0.4f;
+	Sphere *sphere1 = new Sphere(glm::vec3(-5.0, 0.0, -90.0), 15.0, glm::vec3(0, 0, 0));
+	sphere1->opacity = .2f;
+	// sphere1->reflectivity = .2f;
 
-	// Cylinder *cylinder = new Cylinder(glm::vec3(5.0, -15.0, -70.0), 4.0, glm::vec3(1, 0, 0));
+	// Cylinder *cylinder = new Cylinder(glm::vec3(5.0, -10.0, -70.0), 4.0, glm::vec3(1, 0, 0));
 	Sphere *sphere2 = new Sphere(glm::vec3(5.0, 5.0, -90.0), 4.0, glm::vec3(1, 0, 0));
 	// Sphere *sphere3 = new Sphere(glm::vec3(3.0, -15.0, -70.0), 4.0, glm::vec3(0, 1, 0));
 	Plane *plane = new Plane (glm::vec3(-20., -20, -40),

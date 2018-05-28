@@ -36,37 +36,36 @@ float Cylinder::intersect(glm::vec3 posn, glm::vec3 dir)
     float c = diff.x*diff.x + diff.z*diff.z - radius*radius;
     float discrim = b*b - a*c;
 
-    if(fabs(discrim) < 0.001) return -1.0; 
-    if(discrim < 0.0) return -1.0;
+    if(discrim < 0.001) return -1.0; 
 
+    // t1 is smallest
     float t1 = (-b - sqrt(discrim)) / a;
     float t2 = (-b + sqrt(discrim)) / a;
     
-    if (t1 < 0.001) t1 = -1.0;
-    if (t2 < 0.001) t2 = -1.0;
-
-    if (t1 > t2) std::swap(t1, t2);  // t1 is smallest
+    // cylinder is behind the viewer, so ignore
+    if (t1 < 0.001 && t2 < 0.001) return -1.0;
 
     glm::vec3 pt1 = posn + t1 * dir;
     glm::vec3 pt2 = posn + t2 * dir;
 
-    // closest point is valid then return that point
+    // if closest point is valid then return that point
     if (inBounds(pt1)) return t1;
 
     // inside cylinder
-    if (t1 < 0 && inBounds(pt2)) return t2;
+    if (t1 < 0.001 && inBounds(pt2)) return t2;
 
     // test if we are looking through the cylinder bounds over top
     // or underneath. If not, we are looking down or up through the
     // cylinder so find the correct point on the cylinder cap.
-    float norm1 = (pt1.y - this->center.y > 0) ? 1.0 : -1.0;
-    float norm2 = (pt2.y - this->center.y > 0) ? 1.0 : -1.0;
+    float diff1 = pt1.y - this->center.y;
+    float diff2 = pt2.y - this->center.y;
+
+    if (fabs(diff1) < 0.001 && fabs(diff2) < 0.001) return -1.0;
+
+    float norm1 = (diff1 > 0) ? 1.0 : -1.0;
+    float norm2 = (diff2 < 0) ? -1.0 : 1.0;
     if (norm1 == norm2 && !inBounds(pt2)) return -1.0;
-
-    // else calculate caps
     return calcCapT(posn, dir);
-
-    // TODO: include case for if inside the cylinder
 }
 
 /**
