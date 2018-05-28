@@ -37,6 +37,9 @@ const float YMAX =  HEIGHT * 0.5;
 
 vector<SceneObject*> sceneObjects;  //A global list containing pointers to objects in the scene
 
+// glm::vec3 traceShadow(Ray shadow, int step) {
+	
+// }
 
 //---The most important function in a ray tracer! ---------------------------------- 
 //   Computes the colour value obtained by tracing a ray and finding its 
@@ -84,14 +87,14 @@ glm::vec3 trace(Ray ray, int step)
 			glm::vec3 reflectedCol = trace(reflectedRay, step + 1);  // recurse
 			colorSum += sceneObjects[ray.xindex]->reflectivity * reflectedCol;
 		}
+	}
 
-		// transparancy
-		if (sceneObjects[ray.xindex]->opacity < 1.0 && step < MAX_STEPS) {
-			Ray throughRay(ray.xpt, ray.dir);  // + 0.001*ray.dir
-			glm::vec3 refractedCol = trace(throughRay, step + 1);
-			float op = sceneObjects[ray.xindex]->opacity;
-			colorSum = ((1.0f - op) * refractedCol) + (op * colorSum);
-		}
+	// transparancy
+	if (sceneObjects[ray.xindex]->opacity < 1.0 && step < MAX_STEPS) {
+		Ray throughRay(ray.xpt, ray.dir);
+		glm::vec3 refractedCol = trace(throughRay, step + 1);
+		float op = sceneObjects[ray.xindex]->opacity;
+		colorSum = ((1.0f - op) * refractedCol) + (op * colorSum);
 	}
 
 	return colorSum;
@@ -163,11 +166,11 @@ void initialize()
     glClearColor(0, 0, 0, 1);
 
 	Sphere *sphere1 = new Sphere(glm::vec3(-5.0, 0.0, -90.0), 15.0, glm::vec3(0, 0, 1));
-	sphere1->opacity = 0.2f;
+	sphere1->reflectivity = 0.4f;
 
-	// Cylinder *cylinder = new Cylinder(glm::vec3(5.0, -10.0, -70.0), 4.0, glm::vec3(1, 0, 0));
+	// Cylinder *cylinder = new Cylinder(glm::vec3(5.0, -15.0, -70.0), 4.0, glm::vec3(1, 0, 0));
 	Sphere *sphere2 = new Sphere(glm::vec3(5.0, 5.0, -90.0), 4.0, glm::vec3(1, 0, 0));
-	Sphere *sphere3 = new Sphere(glm::vec3(3.0, -15.0, -70.0), 4.0, glm::vec3(0, 1, 0));
+	// Sphere *sphere3 = new Sphere(glm::vec3(3.0, -15.0, -70.0), 4.0, glm::vec3(0, 1, 0));
 	Plane *plane = new Plane (glm::vec3(-20., -20, -40),
                               glm::vec3(20., -20, -40),
                               glm::vec3(20., -20, -200),
@@ -180,7 +183,7 @@ void initialize()
 	sceneObjects.push_back(sphere2);
 	// sceneObjects.push_back(cube); 
 	// sceneObjects.push_back(cylinder);
-	sceneObjects.push_back(sphere3);
+	// sceneObjects.push_back(sphere3);
 	sceneObjects.push_back(plane);
 }
 
