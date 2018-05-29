@@ -115,7 +115,7 @@ glm::vec3 trace(Ray ray, int step)
 		shadow.closestPt(sceneObjects);
 
 		// assuming not covered by another object
-		glm::vec3 lighting = materialCol * lDotn;
+		glm::vec3 lighting = materialCol * lDotn * sceneObjects[ray.xindex]->opacity;
 
 		// specular color
 		glm::vec3 reflVector = glm::reflect(-lightVector, normalVector);
@@ -135,7 +135,7 @@ glm::vec3 trace(Ray ray, int step)
 
 				// cheap transparent shadowing
 				// TODO: add recursive verson that goes through multiple objects
-				colorSum += (1.0f - op) * sceneObjects[shadow.xindex]->getColor(ray.xpt) * lDotn;
+				colorSum += op * (1.0f - op) * sceneObjects[shadow.xindex]->getColor(ray.xpt) * lDotn;
 			}
 		}
 
@@ -144,7 +144,7 @@ glm::vec3 trace(Ray ray, int step)
 			glm::vec3 reflectedDir = glm::reflect(ray.dir, normalVector);
 			Ray reflectedRay(ray.xpt, reflectedDir);
 			glm::vec3 reflectedCol = trace(reflectedRay, step + 1);  // recurse
-			colorSum += sceneObjects[ray.xindex]->reflectivity * reflectedCol;
+			colorSum = sceneObjects[ray.xindex]->reflectivity * reflectedCol + (1.0f - sceneObjects[ray.xindex]->reflectivity) * colorSum;
 		}
 	}
 
@@ -216,16 +216,16 @@ void initialize()
     gluOrtho2D(XMIN, XMAX, YMIN, YMAX);
     glClearColor(0, 0, 0, 1);
 
-	Sphere *sphere1 = new Sphere(glm::vec3(-5.0, 0.0, -90.0), 12.0, glm::vec3(0, 0, 0));
-	sphere1->opacity = .0f;
-	sphere1->reflectivity = .2f;
+	Sphere *sphere1 = new Sphere(glm::vec3(-5.0, 0.0, -90.0), 12.0, glm::vec3(0, 0, 1));
+	sphere1->opacity = .4f;
+	sphere1->reflectivity = .1f;
 	sphere1->refractiveIndex = 1/1.01f;
 
 	// Cylinder *cylinder = new Cylinder(glm::vec3(5.0, -10.0, -70.0), 4.0, glm::vec3(1, 0, 0));
 	Sphere *sphere2 = new Sphere(glm::vec3(10.0, 15.0, -150.0), 4.0, glm::vec3(1, 0, 0));
 	Sphere *sphere3 = new Sphere(glm::vec3(3.0, -10.0, -80.0), 4.0, glm::vec3(0, 1, 0));
-	Plane *plane = new Plane (glm::vec3(-200., -15, -40),
-                              glm::vec3(200., -15, -40),
+	Plane *plane = new Plane (glm::vec3(-200., -15, 1000),
+                              glm::vec3(200., -15, 1000),
                               glm::vec3(200., -15, -1000),
                               glm::vec3(-200., -15, -1000),
                               glm::vec3(0.5, 0.5, 0),
