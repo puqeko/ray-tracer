@@ -47,7 +47,7 @@ vector<SceneObject*> sceneObjects;  //A global list containing pointers to objec
 //----------------------------------------------------------------------------------
 glm::vec3 trace(Ray ray, int step)
 {
-	glm::vec3 backgroundCol(1);
+	glm::vec3 backgroundCol(0.8);
 	glm::vec3 light(10, 40, -3);
 	glm::vec3 ambientCol(0.2);
 
@@ -64,6 +64,51 @@ glm::vec3 trace(Ray ray, int step)
 	glm::vec3 lightVector = glm::normalize(light - ray.xpt);
 	float lDotn = glm::dot(normalVector, lightVector);
 
+		// transparancy
+	if (sceneObjects[ray.xindex]->opacity < 1.0 && step < MAX_STEPS) {
+		
+		// change refraction depending on if we are leaving or entering a medium
+		glm::vec3 g = ray.dir;
+		// if (glm::dot(normalVector, ray.dir) < 0) {
+		g = glm::refract(ray.dir, normalVector, sceneObjects[ray.xindex]->refractiveIndex);
+		// } else {
+			// g = glm::refract(ray.dir, -normalVector, 1.0f/sceneObjects[ray.xindex]->refractiveIndex);
+		// }
+
+
+		Ray throughRay(ray.xpt, g);
+
+		throughRay.closestPt(sceneObjects);
+		if (throughRay.xindex == -1) {
+			std::cout << "Na" << std::endl;
+			colorSum = glm::vec3(1, 0, 0);
+		} else {
+			glm::vec3 m = sceneObjects[throughRay.xindex]->normal(throughRay.xpt);
+			glm::vec3 h = glm::refract(g, -m, 1.0f/sceneObjects[ray.xindex]->refractiveIndex);
+			
+			Ray exitRay(throughRay.xpt, h);
+
+			glm::vec3 refractedCol = trace(exitRay, step + 1);
+			float op = sceneObjects[ray.xindex]->opacity;
+			colorSum = ((1.0f - op) * refractedCol) + (op * colorSum);
+		}
+
+// -------
+
+		// change refraction depending on if we are leaving or entering a medium
+		// glm::vec3 g;
+		// if (glm::dot(normalVector, ray.dir) < 0) {
+		// 	g = glm::refract(ray.dir, normalVector, sceneObjects[ray.xindex]->refractiveIndex);
+		// } else {
+		// 	g = glm::refract(ray.dir, -normalVector, 1.0f/sceneObjects[ray.xindex]->refractiveIndex);
+		// }
+
+		// Ray throughRay(ray.xpt, g);
+		// glm::vec3 refractedCol = trace(throughRay, step + 1);
+		// float op = sceneObjects[ray.xindex]->opacity;
+		// colorSum = ((1.0f - op) * refractedCol) + (op * colorSum);
+	}
+
 	if (lDotn > 0) {
 		// not in shadow
 		Ray shadow(ray.xpt, lightVector);
@@ -76,7 +121,7 @@ glm::vec3 trace(Ray ray, int step)
 		glm::vec3 reflVector = glm::reflect(-lightVector, normalVector);
 		float rDotv = glm::dot(reflVector, -ray.dir);
 		if (rDotv > 0) {
-			lighting += glm::vec3(1.0f) * pow(rDotv, 10.0f);
+			lighting += glm::vec3(1) * pow(rDotv, 10.0f);
 		}
 
 		if (shadow.xindex == -1) {
@@ -101,14 +146,6 @@ glm::vec3 trace(Ray ray, int step)
 			glm::vec3 reflectedCol = trace(reflectedRay, step + 1);  // recurse
 			colorSum += sceneObjects[ray.xindex]->reflectivity * reflectedCol;
 		}
-	}
-
-	// transparancy
-	if (sceneObjects[ray.xindex]->opacity < 1.0 && step < MAX_STEPS) {
-		Ray throughRay(ray.xpt, ray.dir);
-		glm::vec3 refractedCol = trace(throughRay, step + 1);
-		float op = sceneObjects[ray.xindex]->opacity;
-		colorSum = ((1.0f - op) * refractedCol) + (op * colorSum);
 	}
 
 	return colorSum;
@@ -179,26 +216,27 @@ void initialize()
     gluOrtho2D(XMIN, XMAX, YMIN, YMAX);
     glClearColor(0, 0, 0, 1);
 
-	Sphere *sphere1 = new Sphere(glm::vec3(-5.0, 0.0, -90.0), 15.0, glm::vec3(0, 0, 0));
-	sphere1->opacity = .2f;
-	// sphere1->reflectivity = .2f;
+	Sphere *sphere1 = new Sphere(glm::vec3(-5.0, 0.0, -90.0), 12.0, glm::vec3(0, 0, 0));
+	sphere1->opacity = .0f;
+	sphere1->reflectivity = .2f;
+	sphere1->refractiveIndex = 1/1.01f;
 
 	// Cylinder *cylinder = new Cylinder(glm::vec3(5.0, -10.0, -70.0), 4.0, glm::vec3(1, 0, 0));
-	Sphere *sphere2 = new Sphere(glm::vec3(5.0, 5.0, -90.0), 4.0, glm::vec3(1, 0, 0));
-	// Sphere *sphere3 = new Sphere(glm::vec3(3.0, -15.0, -70.0), 4.0, glm::vec3(0, 1, 0));
-	Plane *plane = new Plane (glm::vec3(-20., -20, -40),
-                              glm::vec3(20., -20, -40),
-                              glm::vec3(20., -20, -200),
-                              glm::vec3(-20., -20, -200),
+	Sphere *sphere2 = new Sphere(glm::vec3(10.0, 15.0, -150.0), 4.0, glm::vec3(1, 0, 0));
+	Sphere *sphere3 = new Sphere(glm::vec3(3.0, -10.0, -80.0), 4.0, glm::vec3(0, 1, 0));
+	Plane *plane = new Plane (glm::vec3(-200., -15, -40),
+                              glm::vec3(200., -15, -40),
+                              glm::vec3(200., -15, -1000),
+                              glm::vec3(-200., -15, -1000),
                               glm::vec3(0.5, 0.5, 0),
-							  true);  // infinate plane
+							  false);  // infinate plane
 	// Cube *cube = new Cube(5, glm::vec3(-10, -10, -80), glm::vec3(0.5, 0.5, 0));
 
 	sceneObjects.push_back(sphere1);
 	sceneObjects.push_back(sphere2);
 	// sceneObjects.push_back(cube); 
 	// sceneObjects.push_back(cylinder);
-	// sceneObjects.push_back(sphere3);
+	sceneObjects.push_back(sphere3);
 	sceneObjects.push_back(plane);
 }
 
@@ -207,7 +245,7 @@ int main(int argc, char *argv[]) {
 	cout << "Lab 8" << endl;
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-    glutInitWindowSize(300, 300);
+    glutInitWindowSize(NUMDIV, NUMDIV);
     glutInitWindowPosition(20, 20);
     glutCreateWindow("Raytracer");
 

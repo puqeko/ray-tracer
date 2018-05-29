@@ -14,22 +14,45 @@
 */
 float Sphere::intersect(glm::vec3 posn, glm::vec3 dir)
 {
-    glm::vec3 vdif = posn - center;
-    // because a = 1
-    float b = 2*glm::dot(dir, vdif);
+        glm::vec3 vdif = posn - center;
+    float b = glm::dot(dir, vdif);
     float len = glm::length(vdif);
     float c = len*len - radius*radius;
-    float delta = b*b - 4*c;
+    float delta = b*b - c;
    
 	if(fabs(delta) < 0.001) return -1.0; 
     if(delta < 0.0) return -1.0;
 
-    float t1 = (-b - sqrt(delta)) / 2.0;
-    float t2 = (-b + sqrt(delta)) / 2.0;
-    if(fabs(t1) < 0.001 ) t1 = -1.0;
+    float t1 = -b - sqrt(delta);
+    float t2 = -b + sqrt(delta);
+    if(fabs(t1) < 0.001 )
+    {
+        if (t2 > 0) return t2;
+        else t1 = -1.0;
+    }
     if(fabs(t2) < 0.001 ) t2 = -1.0;
 
 	return (t1 < t2)? t1: t2;
+    // glm::vec3 vdif = posn - center;
+    // // because a = 1
+    // float b = glm::dot(dir, vdif);
+    // float len = glm::length(vdif);
+    // float c = len*len - radius*radius;
+    // float delta = b*b - c;
+   
+    // if(delta < 0.001) return -1.0;
+
+    // // t1 < t2
+    // float t1 = (-b - sqrt(delta));
+    // float t2 = (-b + sqrt(delta));
+
+    // if (t1 < 0.001 && t2 < 0.001) return -1.0;
+
+    // if (t1 < 0.001) {
+    //     if (t2 < 0.001) return -1.0;
+    //     return t2;
+    // }
+    // return t1;
 }
 
 /**
