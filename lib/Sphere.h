@@ -18,7 +18,7 @@
 class Sphere : public SceneObject
 {
 
-private:
+protected:
     glm::vec3 center;
     float radius;
 

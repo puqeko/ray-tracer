@@ -7,6 +7,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <stack>
 #include <glm/glm.hpp>
 
 #ifdef __APPLE__
@@ -18,6 +19,7 @@
 #endif
 
 #include "Sphere.h"
+#include "SphereTex.h"
 #include "Cylinder.h"
 #include "Plane.h"
 #include "Cube.h"
@@ -28,12 +30,13 @@ using namespace std;
 const float WIDTH = 20.0;  
 const float HEIGHT = 20.0;
 const float EDIST = 40.0;
-const int NUMDIV = 300;
+const int NUMDIV = 400;
 const int MAX_STEPS = 5;
 const float XMIN = -WIDTH * 0.5;
 const float XMAX =  WIDTH * 0.5;
 const float YMIN = -HEIGHT * 0.5;
 const float YMAX =  HEIGHT * 0.5;
+char moonFilename[] = "../resources/moon.bmp";
 
 vector<SceneObject*> sceneObjects;  //A global list containing pointers to objects in the scene
 
@@ -66,47 +69,20 @@ glm::vec3 trace(Ray ray, int step)
 
 		// transparancy
 	if (sceneObjects[ray.xindex]->opacity < 1.0 && step < MAX_STEPS) {
-		
-		// change refraction depending on if we are leaving or entering a medium
-		glm::vec3 g = ray.dir;
-		// if (glm::dot(normalVector, ray.dir) < 0) {
-		g = glm::refract(ray.dir, normalVector, sceneObjects[ray.xindex]->refractiveIndex);
-		// } else {
-			// g = glm::refract(ray.dir, -normalVector, 1.0f/sceneObjects[ray.xindex]->refractiveIndex);
-		// }
 
-
-		Ray throughRay(ray.xpt, g);
-
-		throughRay.closestPt(sceneObjects);
-		if (throughRay.xindex == -1) {
-			std::cout << "Na" << std::endl;
-			colorSum = glm::vec3(1, 0, 0);
+		glm::vec3 g;
+		if (glm::dot(normalVector, ray.dir) < 0) {
+			// if entering the object
+			g = glm::refract(ray.dir, normalVector, sceneObjects[ray.xindex]->refractiveIndex);
 		} else {
-			glm::vec3 m = sceneObjects[throughRay.xindex]->normal(throughRay.xpt);
-			glm::vec3 h = glm::refract(g, -m, 1.0f/sceneObjects[ray.xindex]->refractiveIndex);
-			
-			Ray exitRay(throughRay.xpt, h);
-
-			glm::vec3 refractedCol = trace(exitRay, step + 1);
-			float op = sceneObjects[ray.xindex]->opacity;
-			colorSum = ((1.0f - op) * refractedCol) + (op * colorSum);
+			// if exiting
+			g = glm::refract(ray.dir, -normalVector, 1.0f/sceneObjects[ray.xindex]->refractiveIndex);
 		}
 
-// -------
-
-		// change refraction depending on if we are leaving or entering a medium
-		// glm::vec3 g;
-		// if (glm::dot(normalVector, ray.dir) < 0) {
-		// 	g = glm::refract(ray.dir, normalVector, sceneObjects[ray.xindex]->refractiveIndex);
-		// } else {
-		// 	g = glm::refract(ray.dir, -normalVector, 1.0f/sceneObjects[ray.xindex]->refractiveIndex);
-		// }
-
-		// Ray throughRay(ray.xpt, g);
-		// glm::vec3 refractedCol = trace(throughRay, step + 1);
-		// float op = sceneObjects[ray.xindex]->opacity;
-		// colorSum = ((1.0f - op) * refractedCol) + (op * colorSum);
+		Ray throughRay(ray.xpt, g);
+		glm::vec3 refractedCol = trace(throughRay, step + 1);
+		float op = sceneObjects[ray.xindex]->opacity;
+		colorSum = ((1.0f - op) * refractedCol) + (op * colorSum);
 	}
 
 	if (lDotn > 0) {
@@ -114,6 +90,7 @@ glm::vec3 trace(Ray ray, int step)
 		Ray shadow(ray.xpt, lightVector);
 		shadow.closestPt(sceneObjects);
 
+		// diffuse
 		// assuming not covered by another object
 		glm::vec3 lighting = materialCol * lDotn * sceneObjects[ray.xindex]->opacity;
 
@@ -124,19 +101,59 @@ glm::vec3 trace(Ray ray, int step)
 			lighting += glm::vec3(1) * pow(rDotv, 10.0f);
 		}
 
-		if (shadow.xindex == -1) {
+		if (shadow.xindex == -1 || shadow.xdist > glm::length(light - ray.xpt)) {
 			colorSum += lighting;
 		} else {
-			if (shadow.xdist > glm::length(light - ray.xpt)) {
-				colorSum += lighting;
-			} else {
-				float op = sceneObjects[shadow.xindex]->opacity;
-				colorSum += (1.0f - op) * lighting;
 
-				// cheap transparent shadowing
-				// TODO: add recursive verson that goes through multiple objects
-				colorSum += op * (1.0f - op) * sceneObjects[shadow.xindex]->getColor(ray.xpt) * lDotn;
+			// work out the color of light from passing through all transparent objects
+			// stack<SceneObject*> inTheWay;
+			Ray sh = shadow;
+			float reduction = 1.0f;
+			glm::vec3 shColor = glm::vec3(1);
+			while (sh.xindex != -1 ) {//&& sceneObjects[sh.xindex]->opacity != 1.0f
+				// exclude duplicates from exiting objects
+				if (glm::dot(sceneObjects[sh.xindex]->normal(sh.xpt), sh.dir) < 0) {
+					// inTheWay.push_back(sh);
+					reduction *= (1.0f - sceneObjects[sh.xindex]->opacity);
+					shColor *= sceneObjects[sh.xindex]->getColor(sh.xpt);
+				}
+				// if (sceneObjects[sh.xindex]->opacity != 1.0f) cout << sceneObjects[sh.xindex]->opacity << endl;
+				// create a new ray
+				sh = Ray(sh.xpt, sh.dir);
+				sh.closestPt(sceneObjects);
 			}
+
+			if (sh.xindex != -1) {
+				reduction = 0.0f;
+			}
+
+			shColor += (glm::vec3(1) - shColor) * reduction;
+
+			// float reduction = 1.0f;
+			// glm::vec3 shColor = vec3(1, 1, 1);
+			// while (!inTheWay.isEmpty()) {
+			// 	SceneObject* cur = inTheWay.top();
+			// 	inTheWay.pop();
+			// 	reduction *= cur.opacity;
+			// 	shColor
+			// }
+
+			// Ray sh = shadow;
+			// float op = 1.0f;
+			// glm::vec3 shadowColor = glm::vec3(0);
+			// while (sh.xindex != -1.0f && sceneObjects[sh.xindex].opacity != 1.0f) {
+			// 	op *= sceneObjects[sh.xindex].opacity;
+			// 	shadowColor += (glm::vec3(1) - shadowColor) * sceneObjects[shadow.xindex]->getColor(ray.xpt)
+			// 	sh = Ray(sh.xpt, shadow.dir);
+			// 	sh.clostestPt(scenceObjects);
+			// }
+
+			// float op = sceneObjects[shadow.xindex]->opacity;
+			colorSum += reduction * lighting * shColor;  //
+
+			// // cheap transparent shadowing
+			// // TODO: add recursive verson that goes through multiple objects
+			// colorSum += (1.0f - reduction) * shColor * lDotn;
 		}
 
 		// reflections
@@ -216,14 +233,15 @@ void initialize()
     gluOrtho2D(XMIN, XMAX, YMIN, YMAX);
     glClearColor(0, 0, 0, 1);
 
-	Sphere *sphere1 = new Sphere(glm::vec3(-5.0, 0.0, -90.0), 12.0, glm::vec3(0, 0, 1));
-	sphere1->opacity = .4f;
+	// Sphere *sphere1 = new SphereTex(glm::vec3(-5.0, 0.0, -90.0), 15.0, moonFilename, glm::vec3(0, 0, 1));
+	Sphere *sphere1 = new Sphere(glm::vec3(-5.0, 0.0, -90.0), 15.0, glm::vec3(0, 0, 1));	
+	sphere1->opacity = 0.2f;
 	sphere1->reflectivity = .1f;
 	sphere1->refractiveIndex = 1/1.01f;
 
 	// Cylinder *cylinder = new Cylinder(glm::vec3(5.0, -10.0, -70.0), 4.0, glm::vec3(1, 0, 0));
-	Sphere *sphere2 = new Sphere(glm::vec3(10.0, 15.0, -150.0), 4.0, glm::vec3(1, 0, 0));
-	Sphere *sphere3 = new Sphere(glm::vec3(3.0, -10.0, -80.0), 4.0, glm::vec3(0, 1, 0));
+	Sphere *sphere2 = new Sphere(glm::vec3(5.0, 5.0, -70.0), 4.0, glm::vec3(1, 0, 0));
+	Sphere *sphere3 = new Sphere(glm::vec3(-6.0, -10.0, -78.0), 4.0, glm::vec3(0, 1, 0));
 	Plane *plane = new Plane (glm::vec3(-200., -15, 1000),
                               glm::vec3(200., -15, 1000),
                               glm::vec3(200., -15, -1000),
