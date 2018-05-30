@@ -40,10 +40,6 @@ char moonFilename[] = "../resources/moon.bmp";
 
 vector<SceneObject*> sceneObjects;  //A global list containing pointers to objects in the scene
 
-// glm::vec3 traceShadow(Ray shadow, int step) {
-	
-// }
-
 //---The most important function in a ray tracer! ---------------------------------- 
 //   Computes the colour value obtained by tracing a ray and finding its 
 //     closest point of intersection with objects in the scene.
@@ -106,54 +102,26 @@ glm::vec3 trace(Ray ray, int step)
 		} else {
 
 			// work out the color of light from passing through all transparent objects
-			// stack<SceneObject*> inTheWay;
 			Ray sh = shadow;
 			float reduction = 1.0f;
 			glm::vec3 shColor = glm::vec3(1);
-			while (sh.xindex != -1 ) {//&& sceneObjects[sh.xindex]->opacity != 1.0f
+			int limit = MAX_STEPS;
+
+			while (sh.xindex != -1 && limit-- != 0) {
 				// exclude duplicates from exiting objects
 				if (glm::dot(sceneObjects[sh.xindex]->normal(sh.xpt), sh.dir) < 0) {
-					// inTheWay.push_back(sh);
 					reduction *= (1.0f - sceneObjects[sh.xindex]->opacity);
 					shColor *= sceneObjects[sh.xindex]->getColor(sh.xpt);
 				}
-				// if (sceneObjects[sh.xindex]->opacity != 1.0f) cout << sceneObjects[sh.xindex]->opacity << endl;
+				
 				// create a new ray
 				sh = Ray(sh.xpt, sh.dir);
 				sh.closestPt(sceneObjects);
 			}
 
-			if (sh.xindex != -1) {
-				reduction = 0.0f;
-			}
-
+			// mixin shadow color so it reduces with combined object opacity
 			shColor += (glm::vec3(1) - shColor) * reduction;
-
-			// float reduction = 1.0f;
-			// glm::vec3 shColor = vec3(1, 1, 1);
-			// while (!inTheWay.isEmpty()) {
-			// 	SceneObject* cur = inTheWay.top();
-			// 	inTheWay.pop();
-			// 	reduction *= cur.opacity;
-			// 	shColor
-			// }
-
-			// Ray sh = shadow;
-			// float op = 1.0f;
-			// glm::vec3 shadowColor = glm::vec3(0);
-			// while (sh.xindex != -1.0f && sceneObjects[sh.xindex].opacity != 1.0f) {
-			// 	op *= sceneObjects[sh.xindex].opacity;
-			// 	shadowColor += (glm::vec3(1) - shadowColor) * sceneObjects[shadow.xindex]->getColor(ray.xpt)
-			// 	sh = Ray(sh.xpt, shadow.dir);
-			// 	sh.clostestPt(scenceObjects);
-			// }
-
-			// float op = sceneObjects[shadow.xindex]->opacity;
-			colorSum += reduction * lighting * shColor;  //
-
-			// // cheap transparent shadowing
-			// // TODO: add recursive verson that goes through multiple objects
-			// colorSum += (1.0f - reduction) * shColor * lDotn;
+			colorSum += reduction * lighting * shColor;
 		}
 
 		// reflections
