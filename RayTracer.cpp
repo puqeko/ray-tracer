@@ -33,7 +33,8 @@ using namespace std;
 const float WIDTH = 20.0;  
 const float HEIGHT = 20.0;
 const float EDIST = 40.0;
-const int NUMDIV = 1000;
+const int NUMDIV = 500;
+const int ANTIALIAS_LEVEL = 4;
 const int MAX_STEPS = 5;
 const float XMIN = -WIDTH * 0.5;
 const float XMAX =  WIDTH * 0.5;
@@ -168,19 +169,22 @@ void display()
 			yp = YMIN + j*cellY;
 
 			glm::vec3 col = glm::vec3(0);
-			float centerx = xp+0.5*cellX;
-			float centery = yp+0.5*cellY;
-			for (int l = -1; l <= 1; l += 2) {
-				for (int r = -1; r <= 1; r += 2) {
-					glm::vec3 dir(centerx + l * aniX, centery + r * aniY, -EDIST);	//direction of the primary ray
+			float divX = cellX / ANTIALIAS_LEVEL;
+			float divY = cellX / ANTIALIAS_LEVEL;
 
+			float cornerx = xp + 0.5*divX;
+			float cornery = yp + 0.5*divY;
+
+			for (int l = 0; l < ANTIALIAS_LEVEL; l++) {
+				for (int m = 0; m < ANTIALIAS_LEVEL; m++) {
+					glm::vec3 dir(cornerx + l * divX, cornery + m * divY, -EDIST);	//direction of the primary ray
 					Ray ray = Ray(eye, dir);		//Create a ray originating from the camera in the direction 'dir'
 					ray.normalize();				//Normalize the direction of the ray to a unit vector
-					col += trace(ray, 1); //Trace the primary ray and get the colour value
+					col += trace(ray, 0);
 				}
 			}
+			col /= ANTIALIAS_LEVEL*ANTIALIAS_LEVEL;  // average of extra rays
 
-			col /= 4;  // average of 4 cells
 			glColor3f(col.r, col.g, col.b);
 			glVertex2f(xp, yp);				//Draw each cell with its color value
 			glVertex2f(xp+cellX, yp);
@@ -210,42 +214,70 @@ void initialize()
 	Sphere *sphere1 = new Sphere(glm::vec3(-7.0, 0.0, -100.0), 15.0, glm::vec3(0, 0, 1));	
 	sphere1->reflectivity = .6f;
 
-	Cylinder *cylinder = new Cylinder(glm::vec3(7.0, -11.0, -80.0), 4.0, glm::vec3(1, 0, 0));
-	cylinder->reflectivity = 0.1;
-	Sphere *sphere2 = new Sphere(glm::vec3(3.0, 5.0, -80.0), 4.0, glm::vec3(1, 0, 0));
-	Sphere *sphere3 = new Sphere(glm::vec3(-10.0, -10.0, -82.0), 4.0, glm::vec3(0, 1, 0));
-	Sphere *moon = new SphereTex(glm::vec3(15.0, 15.0, -100.0), 6.0, moonFilename, glm::vec3(0, 0, 1));
+	// Cylinder *cylinder = new Cylinder(glm::vec3(7.0, -11.0, -80.0), 4.0, glm::vec3(1, 0, 0));
+	// cylinder->reflectivity = 0.1;
+	// Sphere *sphere2 = new Sphere(glm::vec3(3.0, 5.0, -80.0), 4.0, glm::vec3(1, 0, 0));
+	// Sphere *sphere3 = new Sphere(glm::vec3(-10.0, -10.0, -82.0), 4.0, glm::vec3(0, 1, 0));
+	// Sphere *moon = new SphereTex(glm::vec3(15.0, 15.0, -100.0), 6.0, moonFilename, glm::vec3(0, 0, 1));
 
+	// Plane *plane = new Plane (glm::vec3(-200., -15, 1000),
+    //                           glm::vec3(200., -15, 1000),
+    //                           glm::vec3(200., -15, -1000),
+    //                           glm::vec3(-200., -15, -1000),
+    //                           glm::vec3(0.5, 0.5, 0),
+	// 						  false);  // infinate plane
+	// Cube *cube = new Cube(3, glm::vec3(0, 0, 0), glm::vec3(0.5, 0.5, 0));
+	// cube->transform = glm::translate(cube->transform, glm::vec3(-14, 12, -80));
+	// cube->transform = glm::rotate(cube->transform, PI/6, glm::vec3(0.5, 1, 0));
+
+	// Sphere *glass = new Sphere(glm::vec3(-6.0, 10.0, -65.0), 5.0, glm::vec3(0, 1, 0));
+	sphere1->refractiveIndex = 1/1.01f;
+	sphere1->opacity = 0.2f;
+	sphere1->reflectivity = 0.02f;
+
+	// Torus *torus = new Torus(glm::vec3(0.0, 0.0, 0.0), 3.0, glm::vec3(0, 0, 1));
+
+	// torus->transform = glm::translate(torus->transform, glm::vec3(20, 0, -130.0));
+	// torus->transform = glm::rotate(torus->transform, -PI/4, glm::vec3(0, 1, 0));
+
+	// sceneObjects.push_back(sphere1);
+	// sceneObjects.push_back(sphere2);
+	// sceneObjects.push_back(sphere3);
+	// sceneObjects.push_back(moon);
+	// sceneObjects.push_back(glass);
+
+	// sceneObjects.push_back(cube); 
+	// sceneObjects.push_back(cylinder);
+	// sceneObjects.push_back(plane);
+	// sceneObjects.push_back(torus);
+
+		// Cylinder *cylinder = new Cylinder(glm::vec3(5.0, -10.0, -70.0), 4.0, glm::vec3(1, 0, 0));
+	Sphere *sphere2 = new Sphere(glm::vec3(-5.0, 0.0, -90.0), 2.0, glm::vec3(1, 0, 0));
+	// Sphere *sphere3 = new Sphere(glm::vec3(-6.0, -10.0, -78.0), 4.0, glm::vec3(0, 1, 0));
+	// Torus *torus = new Torus(glm::vec3(0.0, 0.0, 0.0), 3.0, glm::vec3(0, 0, 1));
 	Plane *plane = new Plane (glm::vec3(-200., -15, 1000),
                               glm::vec3(200., -15, 1000),
                               glm::vec3(200., -15, -1000),
                               glm::vec3(-200., -15, -1000),
                               glm::vec3(0.5, 0.5, 0),
 							  false);  // infinate plane
-	Cube *cube = new Cube(3, glm::vec3(0, 0, 0), glm::vec3(0.5, 0.5, 0));
-	cube->transform = glm::translate(cube->transform, glm::vec3(-14, 12, -80));
-	cube->transform = glm::rotate(cube->transform, PI/6, glm::vec3(0.5, 1, 0));
+	Cube *cube = new Cube(5, glm::vec3(0, 0, 0), glm::vec3(0.5, 0.5, 0));
+	cube->transform = glm::translate(cube->transform, glm::vec3(0, -5, -80));
+	cube->transform = glm::rotate(cube->transform, PI/8, glm::vec3(1, 1, 0));
+	
 
-	Sphere *glass = new Sphere(glm::vec3(-6.0, 10.0, -65.0), 5.0, glm::vec3(0, 1, 0));
-	glass->refractiveIndex = 1/1.01f;
-	glass->opacity = 0.2f;
-	glass->reflectivity = 0.02f;
-
-	Torus *torus = new Torus(glm::vec3(0.0, 0.0, 0.0), 3.0, glm::vec3(0, 0, 1));
-
-	torus->transform = glm::translate(torus->transform, glm::vec3(20, 0, -130.0));
-	torus->transform = glm::rotate(torus->transform, -PI/4, glm::vec3(0, 1, 0));
-
+	// torus->transform = glm::translate(torus->transform, glm::vec3(0, 5, -80.0));
+	// torus->transform = glm::rotate(torus->transform, PI/4, glm::vec3(0, 1, 0));
+	// torus->opacity = 0.2f;
+	// torus->reflectivity = .1f;
+	// torus->refractiveIndex = 1/1.01f;
 	sceneObjects.push_back(sphere1);
-	sceneObjects.push_back(sphere2);
-	sceneObjects.push_back(sphere3);
-	sceneObjects.push_back(moon);
-	sceneObjects.push_back(glass);
-
-	sceneObjects.push_back(cube); 
-	sceneObjects.push_back(cylinder);
+	// sceneObjects.push_back(sphere2);
+	// sceneObjects.push_back(cube);
+	// sceneObjects.push_back(cylinder);
+	// sceneObjects.push_back(sphere3);
+	// sceneObjects.push_back(torus);
 	sceneObjects.push_back(plane);
-	sceneObjects.push_back(torus);
 
 
 	// // Sphere *sphere1 = new SphereTex(glm::vec3(-5.0, 0.0, -90.0), 15.0, moonFilename, glm::vec3(0, 0, 1));

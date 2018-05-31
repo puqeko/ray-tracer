@@ -36,7 +36,7 @@ float Cylinder::intersect(glm::vec3 posn, glm::vec3 dir)
     float c = diff.x*diff.x + diff.z*diff.z - radius*radius;
     float discrim = b*b - a*c;
 
-    if(discrim < 0.001) return -1.0; 
+    if (discrim < 0.001) return -1.0; 
 
     // t1 is smallest
     float t1 = (-b - sqrt(discrim)) / a;
