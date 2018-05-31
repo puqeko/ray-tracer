@@ -9,6 +9,8 @@
 #include <vector>
 #include <stack>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
@@ -31,13 +33,15 @@ using namespace std;
 const float WIDTH = 20.0;  
 const float HEIGHT = 20.0;
 const float EDIST = 40.0;
-const int NUMDIV = 400;
+const int NUMDIV = 300;
 const int MAX_STEPS = 5;
 const float XMIN = -WIDTH * 0.5;
 const float XMAX =  WIDTH * 0.5;
 const float YMIN = -HEIGHT * 0.5;
 const float YMAX =  HEIGHT * 0.5;
 char moonFilename[] = "../resources/moon.bmp";
+
+#define PI 3.14159265358979f
 
 vector<SceneObject*> sceneObjects;  //A global list containing pointers to objects in the scene
 
@@ -209,24 +213,37 @@ void initialize()
 	// sphere1->refractiveIndex = 1/1.01f;
 
 	// Cylinder *cylinder = new Cylinder(glm::vec3(5.0, -10.0, -70.0), 4.0, glm::vec3(1, 0, 0));
-	// Sphere *sphere2 = new Sphere(glm::vec3(5.0, 5.0, -70.0), 4.0, glm::vec3(1, 0, 0));
+	Sphere *sphere2 = new Sphere(glm::vec3(-5.0, 0.0, -90.0), 2.0, glm::vec3(1, 0, 0));
 	// Sphere *sphere3 = new Sphere(glm::vec3(-6.0, -10.0, -78.0), 4.0, glm::vec3(0, 1, 0));
-	Torus *torus = new Torus(glm::vec3(-5.0, 0.0, -90.0), 2.0, glm::vec3(0, 0, 1));
+	Torus *torus = new Torus(glm::vec3(0.0, 0.0, 0.0), 3.0, glm::vec3(0, 0, 1));
 	Plane *plane = new Plane (glm::vec3(-200., -15, 1000),
                               glm::vec3(200., -15, 1000),
                               glm::vec3(200., -15, -1000),
                               glm::vec3(-200., -15, -1000),
                               glm::vec3(0.5, 0.5, 0),
 							  false);  // infinate plane
-	// Cube *cube = new Cube(5, glm::vec3(-10, -10, -80), glm::vec3(0.5, 0.5, 0));
+	Cube *cube = new Cube(5, glm::vec3(0, 0, 0), glm::vec3(0.5, 0.5, 0));
+	cube->transform = glm::translate(cube->transform, glm::vec3(0, -5, -80));
+	cube->transform = glm::rotate(cube->transform, PI/8, glm::vec3(1, 1, 0));
+	
 
+	torus->transform = glm::translate(torus->transform, glm::vec3(5, 0, -80.0));
+	// torus->transform = glm::rotate(torus->transform, PI/4, glm::vec3(0, 1, 0));
+	// torus->opacity = 0.2f;
+	// torus->reflectivity = .1f;
+	// torus->refractiveIndex = 1/1.01f;
 	// sceneObjects.push_back(sphere1);
 	// sceneObjects.push_back(sphere2);
-	// sceneObjects.push_back(cube); 
+	// sceneObjects.push_back(cube);
 	// sceneObjects.push_back(cylinder);
 	// sceneObjects.push_back(sphere3);
 	sceneObjects.push_back(torus);
 	sceneObjects.push_back(plane);
+
+	// apply inverted operation
+	for (auto o : sceneObjects) {
+		o->transform = glm::inverse(o->transform);
+	}
 }
 
 

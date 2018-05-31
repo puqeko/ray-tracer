@@ -13,12 +13,12 @@
 #define H_SOBJECT
 #include <glm/glm.hpp>
 
-
 class SceneObject 
 {
 protected:
 	glm::vec3 color;
 public:
+	glm::mat4x4 transform = glm::mat4x4(1.0);
 	float reflectivity = 0.0;  // component of ray is a reflection
 	float refractiveIndex = 1.0;  // index for refraction calculation
 	float opacity = 1.0;  // how visable is it

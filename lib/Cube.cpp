@@ -15,6 +15,12 @@
 */
 float Cube::intersect(glm::vec3 posn, glm::vec3 dir)
 {
+	glm::vec4 tpt = this->transform * glm::vec4(posn.x, posn.y, posn.z, 1);
+	posn = glm::vec3(tpt.x, tpt.y, tpt.z);
+
+	glm::vec4 tdir = this->transform * glm::vec4(dir.x, dir.y, dir.z, 0);
+	dir = glm::vec3(tdir.x, tdir.y, tdir.z);
+
 	float tmin = -1;
 	int idx = -1;
 	for (int i = 0; i < faces.size(); i++) {
@@ -35,6 +41,9 @@ float Cube::intersect(glm::vec3 posn, glm::vec3 dir)
 
 glm::vec3 Cube::normal(glm::vec3 pt)
 {
+	glm::vec4 tpt = this->transform * glm::vec4(pt.x, pt.y, pt.z, 1);
+	pt = glm::vec3(tpt.x, tpt.y, tpt.z);
+
 	if (this->activeFace == -1) {
 		std::cout << "'normal' must call intersect before normal" << std::endl;
 		exit(1);
