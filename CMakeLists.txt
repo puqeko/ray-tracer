@@ -13,7 +13,7 @@ if (APPLE)
 	include_directories(${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR})
 endif ()
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wno-deprecated -fext-numeric-literals")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wno-deprecated")
 
 add_executable(main RayTracer.cpp)
 

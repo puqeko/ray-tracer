@@ -1,4 +1,5 @@
 CMakeFiles/
+build/
 Makefile
 cmake_install.cmake
 main
