@@ -11,6 +11,8 @@
 #include <cmath>
 #include <vector>
 #include <iostream>
+#include <complex>
+#include <algorithm>
 #include <glm/gtx/string_cast.hpp>
 using namespace std;
 
@@ -80,5 +82,6 @@ glm::vec3 Torus::normal(glm::vec3 pt)
     // return direction that point is from the major radial line
     glm::vec3 local = glm::normalize(p - n);
     glm::vec4 l = glm::vec4(local.x, local.y, local.z, 0);
-    return glm::inverse(this->transform) * l;
+    glm::vec4 res = glm::inverse(this->transform) * l;
+    return glm::vec3(res.x, res.y, res.z);
 }
