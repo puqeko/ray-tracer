@@ -33,8 +33,8 @@ using namespace std;
 const float WIDTH = 20.0;  
 const float HEIGHT = 20.0;
 const float EDIST = 40.0;
-const int NUMDIV = 300;
-const int ANTIALIAS_LEVEL = 1;
+const int NUMDIV = 300;  // automatically change the window size when setting this
+const int ANTIALIAS_LEVEL = 1;  // change this to 2 to enable antialiasing, or any higher number for better averaging
 const int MAX_STEPS = 5;
 const float XMIN = -WIDTH * 0.5;
 const float XMAX =  WIDTH * 0.5;
