@@ -11,9 +11,11 @@ if (APPLE)
 	find_package(OpenGL)
 	find_package(GLUT)
 	include_directories(${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR})
+    set(CMAKE_CXX_FLAGS "-std=c++11 -Wno-deprecated")
+else ()
+    # use special flag to enable complex numbers on gnu machines
+    set(CMAKE_CXX_FLAGS "-std=c++11 -Wno-deprecated -fext-numeric-literals")
 endif ()
-
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wno-deprecated")
 
 add_executable(main RayTracer.cpp)
 
